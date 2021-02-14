@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% if request.user.is_authenticated and request.user.id == post.user.id %}
+    <a class="btn btn-danger btn-sm" href="{% url 'posts:post_delete' request.user.id post.id %}">delete Post<a>
+    <a class="btn btn-info btn-sm" href="{% url 'posts:post_edit' request.user.id post.id %}">Edit Post<a>
+    {% endif %}
+    <hr>
+    <p>{{ post.user }} | {{ post.create|date }}</p>
+    <p>{{ post.body }}</p><hr>
+    {% with total=comments.count %}
+    <p>this is post {{ total }} comment{{ total|pluralize }}</p>
+    {% endwith %}<br>
+    {% if request.user.is_authenticated %}
+        <form action="" method="post" novalidate class="col-md-6">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <input value="send" type="submit" class="btn btn-warning btn-sm">
+        </form><br>
+    {% else %}
+    <p> only logged user can send comment </p>
+    {% endif %}
+    {% for comment in comments %}
+    <div class="card bg-dark text-white">
+    <div class="card-header">{{ comment.user }}</div>
+    <div class="card-body">{{ comment.body }}</div>
+    {% if request.user.is_authenticated %}
+        <div class="card-body col-md-8">
+        <form action="{% url 'posts:add_reply' post.id comment.id %}" method="post">
+            {% csrf_token %}
+            {{form.as_p}}
+            <input type="submit" value="send" class="btn btn-warning btn-sm">
+        </form>
+    </div>
+    {% else %}
+    <p class="p-2"> you have to login can send</p>
+    {% endif %}
+
+    {% for reply in comment.rcomment.all  %}
+    <p class="bg-info p-3 m-3" >{{ reply.user }}<br/>{{ reply.body }}</p>
+    {% endfor %}
+    </div><br>
+    {% empty %}
+    <p>No Comment </p>
+    {% endfor %}
+
+{% endblock  %}
