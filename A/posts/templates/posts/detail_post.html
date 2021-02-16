@@ -11,7 +11,11 @@
     {% with total=comments.count %}
     <p>this is post {{ total }} comment{{ total|pluralize }}</p>
     {% endwith %}<br>
+    {% if request.user.is_authenticated  %}
+    <a href="{% url 'posts:like_post' post.id %}" class="btn btn-danger btn-sm mb-3 {% if can_like %}disabled{% endif %}">Like {{ post.like_count}}</a>
+    {% endif %}
     {% if request.user.is_authenticated %}
+    <br>
         <form action="" method="post" novalidate class="col-md-6">
             {% csrf_token %}
             {{ form.as_p }}
@@ -39,7 +43,7 @@
     {% for reply in comment.rcomment.all  %}
     <p class="bg-info p-3 m-3" >{{ reply.user }}<br/>{{ reply.body }}</p>
     {% endfor %}
-    </div><br>
+    </div><br/>
     {% empty %}
     <p>No Comment </p>
     {% endfor %}

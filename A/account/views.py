@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from kavenegar import * 
 from random import randint
 from .models import Profile,Relation
+from django.http import JsonResponse
 
 def user_login(request):
     next=request.GET.get('next')
@@ -83,18 +84,19 @@ def phone_login(request):
     if request.method=="POST":
         form=PhoneLoginForm(request.POST)
         if form.is_valid():
+            global phone,rand_num
             phone=f"0{form.cleaned_data['phone']}"
             rand_num=randint(1000,9999)
             api = KavenegarAPI('54325078707872505A6A654168745145656B39335544484A55774670715947666846616C3730636E6F796B3D')
             params = { 'sender' : '', 'receptor':phone, 'message' :rand_num} 
             response = api.sms_send( params) 
-        return redirect('account:verify',phone,rand_num)
+        return redirect('account:verify')
     else:
         form=PhoneLoginForm()
     return render(request,'account/phoneLogin.html',{'form':form})
 
 
-def verify(request,phone,rand_num):
+def verify(request):
     if request.method=="POST":
         form=VerifycodeForm(request.POST)
         if form.is_valid():
@@ -108,8 +110,30 @@ def verify(request,phone,rand_num):
         form=VerifycodeForm()
     return render(request,'account/verify.html',{'form':form})
 
+@login_required
 def follow(request):
-    pass
+    print('ali')
+    if request.method == 'POST':
+        user_id=request.POST['user_id']
+        following=get_object_or_404(User,pk=user_id)
+        check_relation=Relation.objects.filter(from_user=request.user,to_user=following)
+        if check_relation.exists():
+            return JsonResponse({'status':'exists'})
+        else:
+            Relation(from_user=request.user , to_user=following).save()
+            return JsonResponse({'status':'ok'})
 
+        
+
+
+@login_required
 def unfollow(request):
-    pass
+    if request.method == 'POST':
+        user_id=request.POST['user_id']
+        following=get_object_or_404(User,pk=user_id)
+        check_relation=Relation.objects.filter(from_user=request.user,to_user=following)
+        if check_relation.exists():
+            check_relation.delete()
+            return JsonResponse({'status':'ok'})
+        else:
+            return JsonResponse({'status':'notexists'})
