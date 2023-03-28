@@ -18,10 +18,17 @@ from django.contrib.auth import (
 
 class RegisterView(View):
     form_class = RegisterForm
+    template_name = 'account/register.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('home:home')
+        else:
+            return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         form = self.form_class()
-        return render(request, 'account/register.html', {"form": form})
+        return render(request, self.template_name, {"form": form})
 
     def post(self, request, *args, **kwargs):
         form = self.form_class(request.POST)
@@ -32,12 +39,18 @@ class RegisterView(View):
                                      password=cd["password"])
             messages.success(request, "you registered successfully", 'success')
             return redirect('home:home')
-        return render(request, 'account/register.html', {"form": form})
+        return render(request, self.template_name, {"form": form})
 
 
 class UserLoginView(View):
     form_class = LoginForm
     template_name = 'account/login.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('home:home')
+        else:
+            return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         form = self.form_class()
