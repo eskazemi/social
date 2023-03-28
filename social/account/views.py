@@ -3,9 +3,17 @@ from django.shortcuts import (
     redirect,
 )
 from django.views import View
-from .form import RegisterForm
+from .form import (
+    RegisterForm,
+    LoginForm,
+)
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.contrib.auth import (
+    login,
+    authenticate,
+    logout,
+)
 
 
 class RegisterView(View):
@@ -25,3 +33,33 @@ class RegisterView(View):
             messages.success(request, "you registered successfully", 'success')
             return redirect('home:home')
         return render(request, 'account/register.html', {"form": form})
+
+
+class UserLoginView(View):
+    form_class = LoginForm
+    template_name = 'account/login.html'
+
+    def get(self, request, *args, **kwargs):
+        form = self.form_class()
+        return render(request, self.template_name, {"form": form})
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            cd = form.cleaned_data
+            user = authenticate(request, username=cd["username"], password=cd["password"])
+            if user is not None:
+                login(request, user)
+                messages.success(request, "you logged in successfully", "success")
+                return redirect('home:home')
+            else:
+                messages.error(request, "username or password is wrong", 'danger')
+        return render(request, self.template_name, {"form": form})
+
+
+class UserLogoutView(View):
+
+    def get(self, request):
+        logout(request)
+        messages.success(request, "logout user successfully", 'success')
+        return redirect('home:home')
