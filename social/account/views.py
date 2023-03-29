@@ -14,6 +14,7 @@ from django.contrib.auth import (
     authenticate,
     logout,
 )
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 class RegisterView(View):
@@ -60,17 +61,21 @@ class UserLoginView(View):
         form = self.form_class(request.POST)
         if form.is_valid():
             cd = form.cleaned_data
-            user = authenticate(request, username=cd["username"], password=cd["password"])
+            user = authenticate(request, username=cd["username"],
+                                password=cd["password"])
             if user is not None:
                 login(request, user)
-                messages.success(request, "you logged in successfully", "success")
+                messages.success(request, "you logged in successfully",
+                                 "success")
                 return redirect('home:home')
             else:
-                messages.error(request, "username or password is wrong", 'danger')
+                messages.error(request, "username or password is wrong",
+                               'danger')
         return render(request, self.template_name, {"form": form})
 
 
-class UserLogoutView(View):
+class UserLogoutView(LoginRequiredMixin, View):
+    login_url = '/account/login'
 
     def get(self, request):
         logout(request)
