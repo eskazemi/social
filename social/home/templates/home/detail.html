@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+
+    {% block content %}
+        <p>Home</p>
+        <div class="card">
+            <h5 class="ml-2 mt-2">body post:</h5>
+            <p class="card-body">{{post.body|truncatewords:10}}</p><hr>
+            <h5 class="ml-2 mt-2"> Auther:</h5>
+            <p class="card-body">{{post.user.username}}</p><hr>
+            <p class="card-body">{{post.created_at|date:"M d l"}}</p>
+        </div>
+    {% endblock %}
