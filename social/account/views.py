@@ -5,7 +5,7 @@ from django.shortcuts import (
 from django.views import View
 
 from home.models import Post
-from .form import (
+from .forms import (
     RegisterForm,
     LoginForm,
 )
