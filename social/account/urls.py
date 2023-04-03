@@ -3,7 +3,11 @@ from .views import (
     RegisterView,
     UserLoginView,
     UserLogoutView,
-    UserProfileView
+    UserProfileView,
+    UserResetPasswordView,
+    UserPasswordResetDownView,
+    UserPasswordResetConfirmView,
+    UserPasswordResetCompleteView,
 )
 
 app_name = "account"
@@ -11,5 +15,12 @@ urlpatterns = [
     path('register/', RegisterView.as_view(), name="register"),
     path('login/', UserLoginView.as_view(), name="login"),
     path('logout/', UserLogoutView.as_view(), name="logout"),
-    path('profile/<int:user_id>/', UserProfileView.as_view(), name="profile")
+    path('profile/<int:user_id>/', UserProfileView.as_view(), name="profile"),
+    path('reset/', UserResetPasswordView.as_view(), name="password_reset"),
+    path('reset/done/', UserPasswordResetDownView.as_view(),
+         name="password_reset_done"),
+    path('confirm/<uidb64>/<token>/', UserPasswordResetConfirmView.as_view(),
+         name="password_reset_confirm"),
+    path('confirm/complete/', UserPasswordResetCompleteView.as_view(),
+         name="password_reset_complate"),
 ]
