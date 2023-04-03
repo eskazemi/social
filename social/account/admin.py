@@ -1,3 +1,8 @@
 from django.contrib import admin
+from .models import RelationShip
 
-# Register your models here.
+
+@admin.register(RelationShip)
+class RelationShipAdmin(admin.ModelAdmin):
+    list_display = ('from_user', 'to_user', )
+    list_filter = ('created_at',)

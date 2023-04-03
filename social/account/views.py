@@ -4,8 +4,6 @@ from django.shortcuts import (
     get_object_or_404,
 )
 from django.views import View
-
-from home.models import Post
 from .forms import (
     RegisterForm,
     LoginForm,
@@ -20,6 +18,7 @@ from django.contrib.auth import (
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import views as auth_views
 from django.urls import reverse_lazy
+from .models import RelationShip
 
 
 class RegisterView(View):
@@ -90,10 +89,16 @@ class UserLogoutView(LoginRequiredMixin, View):
 
 class UserProfileView(LoginRequiredMixin, View):
     def get(self, request, user_id):
+        is_following = False
         user = get_object_or_404(User, id=user_id)
         posts = user.posts.all()
-        return render(request, 'account/profile.html', {"user": user, "posts": posts})
-
+        relation = RelationShip.objects.filter(from_user=request.user,
+                                               to_user=user)
+        if relation.exists():
+            is_following = True
+        return render(request, 'account/profile.html',
+                      {"user": user, "posts": posts,
+                       "is_following": is_following})
 
 
 class UserResetPasswordView(auth_views.PasswordResetView):
@@ -102,10 +107,8 @@ class UserResetPasswordView(auth_views.PasswordResetView):
     email_template_name = 'account/password_reset.html'
 
 
-
 class UserPasswordResetDownView(auth_views.PasswordResetDoneView):
     template_name = 'account/password_reset_done.html'
-
 
 
 class UserPasswordResetConfirmView(auth_views.PasswordResetConfirmView):
@@ -115,3 +118,32 @@ class UserPasswordResetConfirmView(auth_views.PasswordResetConfirmView):
 
 class UserPasswordResetCompleteView(auth_views.PasswordResetCompleteView):
     template_name = 'account/password_reset_complete.html'
+
+
+class UserFollowView(LoginRequiredMixin, View):
+    def get(self, request, user_id, *args, **kwargs):
+        user = get_object_or_404(User, pk=user_id)
+        relation = RelationShip.objects.filter(from_user=request.user,
+                                               to_user=user)
+        if relation.exists():
+            messages.error(request, "you are already following this user", 'danger')
+        else:
+            RelationShip.objects.create(from_user=request.user, to_user=user)
+            messages.success(request, "you followed this user", 'success')
+        return redirect('account:profile', user.id)
+
+
+class UserUnFollowView(LoginRequiredMixin, View):
+    def get(self, request, user_id,  *args, **kwargs):
+        user = get_object_or_404(User, pk=user_id)
+        relation = RelationShip.objects.filter(from_user=request.user,
+                                               to_user=user)
+        if relation.exists():
+            relation.delete()
+            messages.success(request, "you unfollowed this user", 'success')
+        else:
+            messages.error(request, "you are not following this user",
+                           'danger')
+
+        return redirect('account:profile', user.id)
+

@@ -8,6 +8,8 @@ from .views import (
     UserPasswordResetDownView,
     UserPasswordResetConfirmView,
     UserPasswordResetCompleteView,
+    UserFollowView,
+    UserUnFollowView,
 )
 
 app_name = "account"
@@ -23,4 +25,8 @@ urlpatterns = [
          name="password_reset_confirm"),
     path('confirm/complete/', UserPasswordResetCompleteView.as_view(),
          name="password_reset_complate"),
+    path('follow/<int:user_id>/', UserFollowView.as_view(),
+         name="user_follow"),
+    path('unfollow/<int:user_id>/', UserUnFollowView.as_view(),
+         name="user_unfollow"),
 ]
