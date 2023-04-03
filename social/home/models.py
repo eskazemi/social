@@ -10,6 +10,10 @@ class Post(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
+
+    class Meta:
+        ordering = ('created_at',)
+
     def __str__(self):
         return f"{self.__class__.__name__}-{self.slug}"
 
