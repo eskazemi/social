@@ -1,6 +1,7 @@
 from django.shortcuts import (
     render,
     redirect,
+    get_object_or_404,
 )
 from django.views import View
 
@@ -87,6 +88,6 @@ class UserLogoutView(LoginRequiredMixin, View):
 
 class UserProfileView(LoginRequiredMixin, View):
     def get(self, request, user_id):
-        user = User.objects.get(id=user_id)
+        user = get_object_or_404(User, id=user_id)
         posts = Post.objects.filter(user=user)
         return render(request, 'account/profile.html', {"user": user, "posts": posts})
