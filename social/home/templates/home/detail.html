@@ -13,4 +13,37 @@
             <a href="{%url 'account:profile' post.user.id%}" class="card-body">{{post.user.username}}</a><hr>
             <p class="card-body">{{post.created_at|date:"M d l"}}</p>
         </div>
+        <br>
+        {% if request.user.is_authenticated %}
+             <form method="post" class="col-md-4" novalidate>
+                {% csrf_token %}
+                {{ form.as_p }}
+                <input type="submit" class="btn btn-success" value="Create">
+             </form>
+        {% else %}
+            <p class="alert alert-danger">Users cannot comment while logged in.</p>
+        {% endif %}
+            <h5 class="ml-3 mt-3 ">{{ comments.count }} comments</h5>
+            {% for comment in comments %}
+                <div class="card mt-5 bg-dark text-white">
+                    <p class="mt-3 ml-3">{{ comment.user }} | {{ comment.created_at|timesince }}</p>
+                    <p class="card-body">{{ comment.body }}</p>
+
+                      {% if request.user.is_authenticated %}
+                            <form action="{% url 'home:add_reply' post.id  comment.id%}" method="post" class="col-md-4" novalidate>
+                            {% csrf_token %}
+                            {{ form.as_p }}
+                            <input type="submit" class="btn btn-success mb-1" value="Reply">
+                            </form>
+                      {% endif %}
+
+                    {% with commenta_r=comment.r_comments.all  %}
+                    {% for reply in commenta_r %}
+                            <p class="mt-3 ml-3 p-3 bg-primary">{{ reply.user }} | {{ reply.created_at|timesince }} <br/> {{ reply.body }}</p>
+                        {% endfor %}
+                    {% endwith %}
+                </div>
+                {% empty %}
+                    <h5 class="ml-3">No comments yes</h5>
+            {% endfor %}
     {% endblock %}

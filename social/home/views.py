@@ -6,9 +6,17 @@ from django.shortcuts import (
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
-from .models import Post
-from .forms import UpdateCreatePostForm
+from .models import (
+    Post,
+    Comment,
+)
+from .forms import (
+    UpdateCreatePostForm,
+    CommentCreateForm,
+)
 from django.utils.text import slugify
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
 
 class HomeView(View):
@@ -18,9 +26,30 @@ class HomeView(View):
 
 
 class PostDetailView(View):
-    def get(self, request, post_id, post_slug, *args, **kwargs):
-        post = get_object_or_404(Post, id=post_id, slug=post_slug)
-        return render(request, 'home/detail.html', {"post": post})
+    form_class = CommentCreateForm
+    post_obj = None
+
+    def setup(self, request, *args, **kwargs):
+        self.post_obj = get_object_or_404(Post, id=kwargs["post_id"],
+                                          slug=kwargs["post_slug"])
+        return super().setup(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        comments = self.post_obj.p_comments.filter(is_reply=False)
+        return render(request, 'home/detail.html', {"post": self.post_obj,
+                                                    "comments": comments,
+                                                    "form": self.form_class})
+
+    @method_decorator(login_required)
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            new_comment = form.save(commit=False)
+            new_comment.user = request.user
+            new_comment.post = self.post_obj
+            new_comment.save()
+            messages.success(request, "create was successfully", 'success')
+            return redirect('home:detail', self.post_obj.id, self.post_obj.slug)
 
 
 class PostDeleteView(LoginRequiredMixin, View):
@@ -58,7 +87,8 @@ class PostUpdateView(LoginRequiredMixin, View):
             new_post.slug = slugify(form.cleaned_data['body'][:30])
             new_post.save()
             messages.success(request, "update was successfully", 'success')
-            return redirect('home:detail', kwargs["post_id"], self.post_instance.slug)
+            return redirect('home:detail', kwargs["post_id"],
+                            self.post_instance.slug)
 
 
 class PostCreateView(LoginRequiredMixin, View):
@@ -77,3 +107,22 @@ class PostCreateView(LoginRequiredMixin, View):
             new_post.save()
             messages.success(request, "create was successfully", 'success')
             return redirect('home:detail', new_post.id, new_post.slug)
+
+
+class ReplyCommentView(View):
+    form_class = CommentCreateForm
+
+    def post(self, request, post_id, comment_id):
+        post_o = get_object_or_404(Post, id=post_id)
+        comment = get_object_or_404(Comment, id=comment_id)
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            reply = form.save(commit=False)
+            reply.user = request.user
+            reply.post = post_o
+            reply.is_reply = True
+            reply.reply = comment
+            reply.save()
+            messages.success(request, "your reply successfully submit",
+                             'success')
+        return redirect('home:detail', post_id, post_o.slug)
