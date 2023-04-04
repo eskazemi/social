@@ -5,6 +5,7 @@ from .views import (
     PostUpdateView,
     PostCreateView,
     ReplyCommentView,
+    VoteCreateView,
 )
 from django.urls import path
 
@@ -18,4 +19,6 @@ urlpatterns = [
     path('post/create', PostCreateView.as_view(), name="create"),
     path('reply/<int:post_id>/<int:comment_id>/', ReplyCommentView.as_view(),
          name="add_reply"),
+    path('like/<int:post_id>/', VoteCreateView.as_view(),
+         name="post_like"),
 ]

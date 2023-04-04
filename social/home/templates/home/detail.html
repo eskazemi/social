@@ -13,6 +13,10 @@
             <a href="{%url 'account:profile' post.user.id%}" class="card-body">{{post.user.username}}</a><hr>
             <p class="card-body">{{post.created_at|date:"M d l"}}</p>
         </div>
+       {% if request.user.is_authenticated %}
+           <a href="{% url 'home:post_like' post.id %}" class="{% if can_like %} disabled {% endif %} btn btn-success mt-2 mb-2" style="width: 100px">Like
+           {{ post.like_counts }}</a>
+        {% endif %}
         <br>
         {% if request.user.is_authenticated %}
              <form method="post" class="col-md-4" novalidate>

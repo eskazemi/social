@@ -9,6 +9,7 @@ from django.contrib import messages
 from .models import (
     Post,
     Comment,
+    Vote
 )
 from .forms import (
     UpdateCreatePostForm,
@@ -36,9 +37,13 @@ class PostDetailView(View):
 
     def get(self, request, *args, **kwargs):
         comments = self.post_obj.p_comments.filter(is_reply=False)
+        can_like = False
+        if request.user.is_authenticated and self.post_obj.user_can_like(request.user):
+            can_like = True
         return render(request, 'home/detail.html', {"post": self.post_obj,
                                                     "comments": comments,
-                                                    "form": self.form_class})
+                                                    "form": self.form_class,
+                                                    "can_like": can_like})
 
     @method_decorator(login_required)
     def post(self, request, *args, **kwargs):
@@ -125,4 +130,17 @@ class ReplyCommentView(View):
             reply.save()
             messages.success(request, "your reply successfully submit",
                              'success')
+        return redirect('home:detail', post_id, post_o.slug)
+
+
+class VoteCreateView(LoginRequiredMixin, View):
+
+    def get(self, request, post_id):
+        post_o = get_object_or_404(Post, id=post_id)
+        like = Vote.objects.filter(post=post_o, user=request.user)
+        if like.exists():
+            messages.error(request, "you have already this post", 'warning')
+        else:
+            Vote.objects.create(post=post_o, user=request.user)
+            messages.success(request, "create was successfully", 'success')
         return redirect('home:detail', post_id, post_o.slug)
