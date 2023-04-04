@@ -7,6 +7,7 @@ from django.views import View
 from .forms import (
     RegisterForm,
     LoginForm,
+    EditUserForm
 )
 from django.contrib.auth.models import User
 from django.contrib import messages
@@ -132,7 +133,8 @@ class UserFollowView(LoginRequiredMixin, View):
         relation = RelationShip.objects.filter(from_user=request.user,
                                                to_user=user)
         if relation.exists():
-            messages.error(request, "you are already following this user", 'danger')
+            messages.error(request, "you are already following this user",
+                           'danger')
         else:
             RelationShip.objects.create(from_user=request.user, to_user=user)
             messages.success(request, "you followed this user", 'success')
@@ -140,7 +142,7 @@ class UserFollowView(LoginRequiredMixin, View):
 
 
 class UserUnFollowView(LoginRequiredMixin, View):
-    def get(self, request, user_id,  *args, **kwargs):
+    def get(self, request, user_id, *args, **kwargs):
         user = get_object_or_404(User, pk=user_id)
         relation = RelationShip.objects.filter(from_user=request.user,
                                                to_user=user)
@@ -153,3 +155,20 @@ class UserUnFollowView(LoginRequiredMixin, View):
 
         return redirect('account:profile', user.id)
 
+
+class EditUserView(LoginRequiredMixin, View):
+    form_class = EditUserForm
+
+    def get(self, request, *args, **kwargs):
+        form = self.form_class(instance=request.user.profile, initial=
+        {"email": request.user.email})
+        return render(request, "account/profile_edit.html", {"form": form})
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST, instance=request.user.profile)
+        if form.is_valid():
+            form.save()
+            request.user.email = form.cleaned_data["email"]
+            request.user.save()
+            messages.success(request, "profile update successfully", 'success')
+        return redirect("account:profile", request.user.id)

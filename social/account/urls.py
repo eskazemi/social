@@ -10,6 +10,7 @@ from .views import (
     UserPasswordResetCompleteView,
     UserFollowView,
     UserUnFollowView,
+    EditUserView
 )
 
 app_name = "account"
@@ -29,4 +30,6 @@ urlpatterns = [
          name="user_follow"),
     path('unfollow/<int:user_id>/', UserUnFollowView.as_view(),
          name="user_unfollow"),
+    path('edit_user/', EditUserView.as_view(),
+         name="edit_user"),
 ]
