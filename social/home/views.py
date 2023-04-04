@@ -14,6 +14,7 @@ from .models import (
 from .forms import (
     UpdateCreatePostForm,
     CommentCreateForm,
+    SearchForm,
 )
 from django.utils.text import slugify
 from django.contrib.auth.decorators import login_required
@@ -21,9 +22,14 @@ from django.utils.decorators import method_decorator
 
 
 class HomeView(View):
+    form_class = SearchForm
+
     def get(self, request, *args, **kwargs):
         posts = Post.objects.all()
-        return render(request, 'home/index.html', {"posts": posts})
+        if request.GET.get("search"):
+            posts = posts.filter(body__contains=request.GET["search"])
+        return render(request, 'home/index.html', {"posts": posts,
+                                                   "form": self.form_class})
 
 
 class PostDetailView(View):
@@ -38,7 +44,8 @@ class PostDetailView(View):
     def get(self, request, *args, **kwargs):
         comments = self.post_obj.p_comments.filter(is_reply=False)
         can_like = False
-        if request.user.is_authenticated and self.post_obj.user_can_like(request.user):
+        if request.user.is_authenticated and self.post_obj.user_can_like(
+                request.user):
             can_like = True
         return render(request, 'home/detail.html', {"post": self.post_obj,
                                                     "comments": comments,
